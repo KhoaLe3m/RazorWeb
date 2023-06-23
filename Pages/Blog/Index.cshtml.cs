@@ -17,7 +17,7 @@ namespace RazorWeb.Pages_Blog
         {
             _context = context;
         }
-        public const int ITEMS_PER_PAGE = 10;
+        public const int ITEMS_PER_PAGE = 5;
         [BindProperty(SupportsGet =true,Name = "p")]
         public int currentPage { set; get; }
         public int countPages { set; get; }
