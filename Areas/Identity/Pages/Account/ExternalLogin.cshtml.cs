@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -72,7 +72,7 @@ namespace RazorWeb.Areas.Identity.Pages.Account
             returnUrl = returnUrl ?? Url.Content("~/");
             if (remoteError != null)
             {
-                ErrorMessage = $"Error from external provider: {remoteError}";
+                ErrorMessage = $"Lỗi từ dịch vụ ngoài: {remoteError}";
                 return RedirectToPage("./Login", new {ReturnUrl = returnUrl });
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
@@ -116,12 +116,74 @@ namespace RazorWeb.Areas.Identity.Pages.Account
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                ErrorMessage = "Error loading external login information during confirmation.";
+                ErrorMessage = "Lỗi lấy thông tin từ dịch vụ ngoài";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
 
             if (ModelState.IsValid)
             {
+                var registeredUser = await _userManager.FindByEmailAsync(Input.Email);
+                string externalEmail = null;
+                AppUser externalEmailUser = null;
+                if(info.Principal.HasClaim(c => c.Type == ClaimTypes.Email)){
+                    externalEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+                }
+                if(externalEmail != null)
+                {
+                    externalEmailUser = await _userManager.FindByEmailAsync(externalEmail);
+                }
+                //
+                if((externalEmailUser != null) && registeredUser != null)
+                {
+                    if(registeredUser.Id == externalEmailUser.Id)
+                    {
+                        var resultLink = await _userManager.AddLoginAsync(registeredUser, info);
+                        if (resultLink.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(registeredUser, isPersistent: false);
+                            return LocalRedirect(returnUrl);
+
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Không liên kết được tài khoản,hãy sử dụng Email khác!");
+                        return Page();
+                    }
+                }
+                if((externalEmailUser != null) && registeredUser == null )
+                {
+                    ModelState.AddModelError(string.Empty, "Không hỗ trợ tạo tài khoản mới có email khác với email từ dịch vụ ngoài");
+                    return Page();
+                }
+
+                if(externalEmailUser == null && externalEmail == Input.Email)
+                {
+                    var newUser = new AppUser()
+                    {
+                        UserName = externalEmail,
+                        Email = externalEmail
+                    };
+                    var resultCreateNewUser = await _userManager.CreateAsync(newUser);
+                    if (resultCreateNewUser.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(newUser, info);
+                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
+                        await _userManager.ConfirmEmailAsync(newUser, code);
+
+                        await _signInManager.SignInAsync(newUser,isPersistent:false);
+                        return LocalRedirect(returnUrl);
+
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Không tạo được tài khoản mới!");
+                        return Page();
+                    }
+                }
+                return Content("Dừng lại ở đây");
+
+
                 var user = new AppUser { UserName = Input.Email, Email = Input.Email };
 
                 var result = await _userManager.CreateAsync(user);

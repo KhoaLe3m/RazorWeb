@@ -81,6 +81,19 @@ namespace RazorWeb
                 options.AccessDeniedPath = "/khongduoctruycap.html";
             });
 
+            services.AddAuthentication().AddGoogle(
+                options=> {
+                    var gConfig = Configuration.GetSection("Authentication:Google");
+                    options.ClientId = gConfig["ClientId"];
+                    options.ClientSecret = gConfig["ClientSecret"];
+                    options.CallbackPath = "/dang-nhap-tu-google";
+                })
+                .AddFacebook(options => {
+                    var fConfig = Configuration.GetSection("Authentication:Facebook");
+                    options.AppId = fConfig["AppId"];
+                    options.AppSecret = fConfig["AppSecret"];
+                    options.CallbackPath = "/dang-nhap-tu-facebook";
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
