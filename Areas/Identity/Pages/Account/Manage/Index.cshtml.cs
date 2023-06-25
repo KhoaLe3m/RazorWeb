@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -33,9 +33,16 @@ namespace RazorWeb.Areas.Identity.Pages.Account.Manage
 
         public class InputModel
         {
-            [Phone]
-            [Display(Name = "Phone number")]
+            [Phone(ErrorMessage = "{0} bị sai định dạng")]
+            [Display(Name = "Số điện thoại")]
             public string PhoneNumber { get; set; }
+
+            [Display(Name = "Địa chỉ")]
+            [StringLength(400)]
+            public string HomeAddress { get; set; }
+
+            [DataType(DataType.Date)]
+            public DateTime? BirthDate { set; get; }
         }
 
         private async Task LoadAsync(AppUser user)
@@ -47,7 +54,9 @@ namespace RazorWeb.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                HomeAddress = user.HomeAddress,
+                BirthDate = user.BirthDate
             };
         }
 
@@ -77,7 +86,7 @@ namespace RazorWeb.Areas.Identity.Pages.Account.Manage
                 return Page();
             }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+            /*var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
             if (Input.PhoneNumber != phoneNumber)
             {
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
@@ -86,10 +95,15 @@ namespace RazorWeb.Areas.Identity.Pages.Account.Manage
                     StatusMessage = "Unexpected error when trying to set phone number.";
                     return RedirectToPage();
                 }
-            }
+            }*/
+            user.HomeAddress = Input.HomeAddress;
+            user.PhoneNumber = Input.PhoneNumber;
+            user.BirthDate = Input.BirthDate;
+
+            await _userManager.UpdateAsync(user);
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Hồ sơ của bạn đã được cập nhật";
             return RedirectToPage();
         }
     }
