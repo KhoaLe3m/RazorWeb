@@ -29,4 +29,13 @@
     <PackageReference Include="MimeKit" Version="4.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Areas\Admin\Pages\Role\Create - Copy - Copy.cshtml.cs">
+      <DependentUpon>Create - Copy.cshtml.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Areas\Admin\Pages\Role\Create - Copy.cshtml.cs">
+      <DependentUpon>Create.cshtml.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 
 namespace RazorWeb
 {
@@ -46,6 +47,7 @@ namespace RazorWeb
                 .AddDefaultTokenProviders();*/
             // sử dụng giao diện của package
             services.AddDefaultIdentity<AppUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<MyBlogContext>()
                 .AddDefaultTokenProviders();
             // Cấu hình
@@ -94,6 +96,9 @@ namespace RazorWeb
                     options.AppSecret = fConfig["AppSecret"];
                     options.CallbackPath = "/dang-nhap-tu-facebook";
                 });
+            services.AddSingleton<IdentityErrorDescriber, AppIdentityErrorDescriber>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -117,7 +122,6 @@ namespace RazorWeb
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
@@ -131,4 +135,5 @@ namespace RazorWeb
 /*
  dotnet aspnet-codegenerator razorpage -m RazorWeb.Models.Article -dc RazorWeb.Models.MyBlogContext -outDir Pages/Blog -udl --referenceScriptLibraries
  dotnet aspnet-codegenerator identity -dc RazorWeb.Models.MyBlogContext
+ dotnet new page -n Index -o Areas/Admin/Pages/Role -na RazorWeb.Admin.Role
  */
