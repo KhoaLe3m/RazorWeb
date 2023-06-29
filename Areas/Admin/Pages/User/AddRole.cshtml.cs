@@ -17,10 +17,12 @@ namespace RazorWeb.Areas.Admin.Pages.User
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly MyBlogContext _context;
         public AddRoleModel(
             UserManager<AppUser> userManager,
-            SignInManager<AppUser> signInManager,RoleManager<IdentityRole> roleManager)
+            SignInManager<AppUser> signInManager,RoleManager<IdentityRole> roleManager,MyBlogContext context)
         {
+            _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
@@ -35,9 +37,26 @@ namespace RazorWeb.Areas.Admin.Pages.User
         public string[] RoleName { get; set; }
 
         public SelectList allRoles { get; set; }
-
+        public List<IdentityRoleClaim<string>> claimsInRole { get; set; }
+        public List<IdentityUserClaim<string>> claimsInUserClaim { get; set; }
         
-
+        async Task getClaimsThroughRolesInUser(string id)
+        {
+            // Lấy tất cả các role của User có
+            var listRoles = from role in _context.Roles
+                            join ur in _context.UserRoles on role.Id equals ur.RoleId
+                            where ur.UserId == id
+                            select role;
+            // Lấy các claim từ các role của User có 
+            var _claimsInRole = from c in _context.RoleClaims
+                                join r in listRoles on c.RoleId equals r.Id
+                                select c;
+            claimsInRole = await _claimsInRole.ToListAsync();
+            // Lấy các claim trực tiếp được gán cho user
+            claimsInUserClaim = await (from c in _context.UserClaims
+                                 where c.UserId == id
+                                 select c).ToListAsync();
+        }
         
         public async Task<IActionResult> OnGetAsync(string id)
         {
@@ -54,6 +73,10 @@ namespace RazorWeb.Areas.Admin.Pages.User
             ViewData["Title"] = "Truyền Role";
             List<string> roleName = await _roleManager.Roles.Select(r=>r.Name).ToListAsync();
             allRoles = new SelectList(roleName);
+
+            await getClaimsThroughRolesInUser(id);
+            
+
             return Page();
         }
 
@@ -68,7 +91,9 @@ namespace RazorWeb.Areas.Admin.Pages.User
             {
                 return NotFound($"Không thấy user có id : {id}");
             }
-            
+
+            await getClaimsThroughRolesInUser(id);
+
             var OldRoleNames = (await _userManager.GetRolesAsync(user)).ToArray();
             var deleteRoles = OldRoleNames.Where(r => !RoleName.Contains(r));
             var addRoles = RoleName.Where(r => !OldRoleNames.Contains(r));

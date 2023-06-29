@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using RazorWeb.Models;
 
 namespace RazorWeb.Areas.Admin.Pages.Role
 {
+    [Authorize(Policy = "AllowEditRole")]
     public class EditModel : RolePageModel
     {
         public EditModel(RoleManager<IdentityRole> roleManager, MyBlogContext myBlogContext) : base(roleManager, myBlogContext)
@@ -24,7 +27,7 @@ namespace RazorWeb.Areas.Admin.Pages.Role
             public string Name { get; set; }
         }
 
-
+        public List<IdentityRoleClaim<string>> claims { set; get; }
         [BindProperty]
         public InputModel InputRole { set; get; }
 
@@ -40,6 +43,7 @@ namespace RazorWeb.Areas.Admin.Pages.Role
                 {
                     Name = role.Name
                 };
+                claims = await _context.RoleClaims.Where(rc => rc.RoleId == role.Id).ToListAsync();
                 return Page();
             }
             return NotFound("Không tìm thấy roleid");
@@ -51,6 +55,9 @@ namespace RazorWeb.Areas.Admin.Pages.Role
                 return NotFound("Không tìm thấy roleid");
             role = await _roleManager.FindByIdAsync(roleid);
             if(role == null) return NotFound("Không tìm thấy roleid");
+
+            claims = await _context.RoleClaims.Where(rc => rc.RoleId == role.Id).ToListAsync();
+            
             if (!ModelState.IsValid) return Page();
             role.Name = InputRole.Name;
             var result = await _roleManager.UpdateAsync(role);

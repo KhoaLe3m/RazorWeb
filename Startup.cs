@@ -98,7 +98,16 @@ namespace RazorWeb
                 });
             services.AddSingleton<IdentityErrorDescriber, AppIdentityErrorDescriber>();
 
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AllowEditRole", policyBuilder =>
+                {
+                    policyBuilder.RequireAuthenticatedUser();
+                    
+                    policyBuilder.RequireClaim("canedit", "user");
 
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
