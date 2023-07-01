@@ -10,10 +10,11 @@ using Microsoft.Extensions.Hosting;
 using RazorWeb.Models;
 using RazorWeb.Services;
 using System;
+using RazorWeb.Security.Requirements;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RazorWeb
 {
@@ -36,6 +37,7 @@ namespace RazorWeb
             services.AddSingleton<IEmailSender,SendMailService>();
 
             services.AddRazorPages();
+            // Thêm dbcontext sử dụng bằng sqlserver
             services.AddDbContext<MyBlogContext>(options =>
             {
                 string connectionString = Configuration.GetConnectionString("MyBlogContext");
@@ -97,17 +99,32 @@ namespace RazorWeb
                     options.CallbackPath = "/dang-nhap-tu-facebook";
                 });
             services.AddSingleton<IdentityErrorDescriber, AppIdentityErrorDescriber>();
-
+            // Thêm xác thực bằng policy,claim
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("AllowEditRole", policyBuilder =>
                 {
                     policyBuilder.RequireAuthenticatedUser();
-                    
                     policyBuilder.RequireClaim("canedit", "user");
-
+                });
+                options.AddPolicy("InGenZ", policyBuilder =>
+                {
+                    policyBuilder.RequireAuthenticatedUser();
+                    /*policyBuilder.RequireClaim("canedit", "user");*/
+                    policyBuilder.Requirements.Add(new GenZRequirement());
+                });
+                options.AddPolicy("ShowAdminMenu", policyBuilder =>
+                {
+                    policyBuilder.RequireAuthenticatedUser();
+                    /*policyBuilder.RequireClaim("canedit", "user");*/
+                    policyBuilder.RequireRole("Admin");
+                });
+                options.AddPolicy("CanUpdateArticle", policyBuilder =>
+                {
+                    policyBuilder.Requirements.Add(new ArticleUpdateRequirement());
                 });
             });
+            services.AddTransient<IAuthorizationHandler, AppAuthorizationHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -135,9 +152,7 @@ namespace RazorWeb
             {
                 endpoints.MapRazorPages();
             });
-            SignInManager<AppUser> s;
-            UserManager<AppUser> u;
-             
+            
         }
     }
 }

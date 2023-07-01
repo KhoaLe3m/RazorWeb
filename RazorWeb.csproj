@@ -30,6 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Areas\Admin\Pages\Role\Create - Copy - Copy %282%29.cshtml.cs">
+      <DependentUpon>Create.cshtml.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Areas\Admin\Pages\Role\Create - Copy - Copy - Copy.cshtml.cs">
+      <DependentUpon>Create - Copy.cshtml.cs</DependentUpon>
+    </Compile>
     <Compile Update="Areas\Admin\Pages\Role\Create - Copy - Copy.cshtml.cs">
       <DependentUpon>Create - Copy.cshtml.cs</DependentUpon>
     </Compile>

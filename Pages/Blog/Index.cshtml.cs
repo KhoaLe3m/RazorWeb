@@ -23,9 +23,7 @@ namespace RazorWeb.Pages_Blog
         [BindProperty(SupportsGet =true,Name = "p")]
         public int currentPage { set; get; }
         public int countPages { set; get; }
-
         public IList<Article> Article { get;set; }
-
         public async Task OnGetAsync(string? SearchString)
         {
             int totalArticle = await _context.articles.CountAsync();

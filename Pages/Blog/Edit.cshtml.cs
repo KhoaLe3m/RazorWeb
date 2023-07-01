@@ -4,16 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using RazorWeb.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace RazorWeb.Pages_Blog
 {
     public class EditModel : PageModel
     {
         private readonly RazorWeb.Models.MyBlogContext _context;
-
-        public EditModel(RazorWeb.Models.MyBlogContext context)
+        private readonly IAuthorizationService _authorizationService;
+        public EditModel(RazorWeb.Models.MyBlogContext context,IAuthorizationService authorizationService)
         {
             _context = context;
+            _authorizationService = authorizationService;
         }
 
         [BindProperty]
@@ -48,7 +51,12 @@ namespace RazorWeb.Pages_Blog
 
             try
             {
-                await _context.SaveChangesAsync();
+                // Kiem tra quyen cap nhat
+                var canUpdate = await _authorizationService.AuthorizeAsync(this.User,Article ,"CanUpdateArticle");
+                if (canUpdate.Succeeded)
+                    await _context.SaveChangesAsync();
+                else
+                    return Content("Không được quyền cập nhật");
             }
             catch (DbUpdateConcurrencyException)
             {
